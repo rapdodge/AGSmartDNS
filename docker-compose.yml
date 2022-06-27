@@ -1,0 +1,56 @@
+--- 
+networks: 
+  AGSmartDNS: 
+    ipam: 
+      config: 
+        - 
+          subnet: 172.16.0.0/29
+services: 
+  adguard: 
+    container_name: adguardhome
+    deploy: 
+      resources: 
+        limits: 
+          cpus: "0.1"
+          memory: 256M
+    dns: 
+      - "8.8.8.8"
+      - "208.67.222.222"
+    image: adguard/adguardhome
+    networks: 
+      AGSmartDNS: 
+        ipv4_address: "172.16.0.2"
+    ports: 
+      - "53:53/udp"
+      - "3000:3000/tcp"
+    restart: unless-stopped
+    volumes: 
+      - "./work:/opt/adguardhome/work"
+      - "./conf:/opt/adguardhome/conf"
+  smartdns: 
+    build: 
+      dockerfile: ./smartdns/Dockerfile
+    container_name: smartdns
+    deploy: 
+      resources: 
+        limits: 
+          cpus: "0.1"
+          memory: 256M
+    dns: 
+      - "8.8.8.8"
+      - "208.67.222.222"
+    entrypoint: 
+      - /opt/smartdns/smartdns
+      - "-f"
+      - "-x"
+      - "-c"
+      - /opt/smartdns/config/smartdns.conf
+    networks: 
+      AGSmartDNS: 
+        ipv4_address: "172.16.0.3"
+    ports: 
+      - "6053:6053/tcp"
+      - "6053:6053/udp"
+    restart: unless-stopped
+    volumes: 
+      - "./smartdns/smartdns.conf:/opt/smartdns/config/smartdns.conf"
